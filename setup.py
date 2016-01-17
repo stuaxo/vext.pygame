@@ -1,6 +1,18 @@
+#!/usr/bin/env python
+info="""
+Allow use of system Pygame from a virtualenv
+Should work on all platforms.
+
+report bugs to https://github.com/stuaxo/vext
+"""
+
+version="0.5.2"
+vext_version="vext>=%s" % version
+ 
+
 from glob import glob
 from os.path import dirname, abspath, join
-from sys import prefix
+from subprocess import call
 
 from distutils import sysconfig
 from setuptools import setup
@@ -8,28 +20,22 @@ from setuptools.command.install import install
 
 here=dirname(abspath(__file__))
 site_packages_path = sysconfig.get_python_lib()
-vext_files = list(glob("*.vext"))
+vext_files = [join(here, fn) for fn in glob("*.vext")]
 
 def _post_install():
-    from vext.install import check_sysdeps, install_vexts
-    install_vexts(vext_files)  # data_files doesn't work in pip7 so do it ourselves
-    check_sysdeps(join(here, *vext_files))
+    cmd = ["vext", "-i " + " ".join(vext_files)]
+    call(cmd)
 
 class Install(install):
     def run(self):
         self.do_egg_install()
-        self.execute(_post_install, [], msg="Check system dependencies:")
-
-long_description="""
-Allow use of system pygame in a virtualenv  
-Should work on all platforms.
-"""
+        self.execute(_post_install, [], msg="Install vext files:")
 
 setup(
     name='vext.pygame',
-    version='0.5.0',
+    version=version,
     description='Use system pygame from a virtualenv',
-    long_description=long_description,
+    long_description=info,
 
     cmdclass={
         'install': Install,
@@ -63,5 +69,5 @@ setup(
     keywords='virtualenv pygame 3d vext',
 
     setup_requires=["setuptools>=0.18.8"],
-    install_requires=["vext>=0.5.0"],
+    install_requires=[vext_version],
 )
